@@ -12,6 +12,9 @@ const PRIVATE_HOST_REGEX = [
   /^fc00::/i,
   /^fd00::/i,
   /^fe80::/i,
+  // IPv4-mapped IPv6 (e.g. [::ffff:127.0.0.1] which Node normalizes to ::ffff:7f00:1).
+  // Without this, an attacker could bypass the IPv4 private-range checks via IPv6 syntax.
+  /^::ffff:/i,
 ];
 
 export function assertSafePublicUrl(input: string): URL {

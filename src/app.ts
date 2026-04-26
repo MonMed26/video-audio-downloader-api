@@ -40,8 +40,9 @@ export function createApp(): Express {
   app.use("/", healthRouter);
 
   // Protect the API surface with rate limiting + optional API key.
-  app.use("/api", limiter, apiKeyAuth, infoRouter);
-  app.use("/api", limiter, apiKeyAuth, downloadRouter);
+  // Both routers are mounted on a single app.use so the limiter and
+  // auth middleware run exactly once per /api request.
+  app.use("/api", limiter, apiKeyAuth, infoRouter, downloadRouter);
 
   // Public file serving (URLs returned by /api/download)
   app.use("/", filesRouter);
