@@ -1,0 +1,58 @@
+/* Background ambient glow */
+.bg-glow {
+  position: fixed;
+  inset: -10%;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(60rem 40rem at 15% -10%, rgba(124, 58, 237, 0.35), transparent 60%),
+    radial-gradient(50rem 30rem at 90% 0%, rgba(6, 182, 212, 0.22), transparent 60%),
+    radial-gradient(40rem 25rem at 50% 110%, rgba(236, 72, 153, 0.18), transparent 60%);
+  filter: blur(2px);
+}
+
+/* Glass card */
+.card {
+  position: relative;
+  border-radius: 1rem;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.015));
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow:
+    0 1px 0 0 rgba(255, 255, 255, 0.04) inset,
+    0 20px 50px -20px rgba(2, 6, 23, 0.6);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+/* Segmented control labels */
+.seg {
+  position: relative;
+  cursor: pointer;
+  border-radius: 0.625rem;
+  color: rgb(203 213 225 / 0.85);
+  transition: color 0.18s, background-color 0.18s;
+}
+.seg:hover {
+  color: white;
+}
+.seg:has(input:checked) {
+  background: linear-gradient(180deg, rgba(99, 102, 241, 0.25), rgba(34, 211, 238, 0.18));
+  color: white;
+  box-shadow:
+    0 1px 0 0 rgba(255, 255, 255, 0.08) inset,
+    0 6px 20px -10px rgba(99, 102, 241, 0.5);
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+/* Toast visible state */
+#toast-inner.show {
+  display: block;
+  transform: translateY(0);
+}
