@@ -38,7 +38,10 @@ export function assertSafePublicUrl(input: string): URL {
   if (!ALLOWED_PROTOCOLS.has(parsed.protocol)) {
     throw new ValidationError("Only http(s) URLs are allowed");
   }
-  const host = parsed.hostname.toLowerCase();
+  // WHATWG URL keeps the brackets around IPv6 hostnames (e.g. "[::1]"),
+  // which would defeat both the set lookup and every regex below. Strip them
+  // before matching so all IPv6-based SSRF vectors are evaluated correctly.
+  const host = parsed.hostname.toLowerCase().replace(/^\[|\]$/g, "");
   if (PRIVATE_HOSTNAMES.has(host)) {
     throw new ValidationError("URL points to a private/local address");
   }
