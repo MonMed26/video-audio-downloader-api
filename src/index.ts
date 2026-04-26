@@ -4,18 +4,28 @@ import { config } from "./config.js";
 import { logger } from "./logger.js";
 import { startCleanupJob } from "./services/cleanup.js";
 import { checkBinary } from "./services/ytdlp.js";
+import { checkFfmpeg } from "./services/ffmpeg.js";
 
 async function main(): Promise<void> {
   await fs.mkdir(config.downloadDir, { recursive: true });
 
-  const probe = await checkBinary();
-  if (!probe.ok) {
+  const [ytdlpProbe, ffmpegProbe] = await Promise.all([checkBinary(), checkFfmpeg()]);
+  if (!ytdlpProbe.ok) {
     logger.warn("yt-dlp not detected at startup — install it before downloading", {
       ytdlpPath: config.ytdlpPath,
-      error: probe.error,
+      error: ytdlpProbe.error,
     });
   } else {
-    logger.info("yt-dlp ready", { version: probe.version });
+    logger.info("yt-dlp ready", { version: ytdlpProbe.version });
+  }
+  if (!ffmpegProbe.ok) {
+    logger.warn(
+      "ffmpeg not detected at startup — video merge & MP3 conversion will fail. " +
+        "Install ffmpeg or set FFMPEG_PATH in .env",
+      { ffmpegPath: config.ffmpegPath, error: ffmpegProbe.error },
+    );
+  } else {
+    logger.info("ffmpeg ready", { version: ffmpegProbe.version });
   }
 
   startCleanupJob();

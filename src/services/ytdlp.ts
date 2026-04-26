@@ -71,7 +71,6 @@ export async function getInfo(url: string): Promise<VideoInfo> {
     "--no-warnings",
     "--no-playlist",
     "--dump-single-json",
-    "--no-call-home",
     url,
   ];
   const { stdout, stderr, code } = await run(args, { timeoutMs: 60_000 });
@@ -111,7 +110,6 @@ export async function download(opts: DownloadOptions): Promise<DownloadResult> {
   const args: string[] = [
     "--no-warnings",
     "--no-playlist",
-    "--no-call-home",
     "--restrict-filenames",
     "--no-mtime",
     "-o",

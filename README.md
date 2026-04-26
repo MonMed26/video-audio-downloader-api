@@ -54,6 +54,38 @@ ffmpeg -version
 brew install yt-dlp ffmpeg
 ```
 
+**Windows (lokal, lewat winget):**
+
+```powershell
+winget install yt-dlp.yt-dlp
+winget install Gyan.FFmpeg
+```
+
+Setelah install, **tutup & buka ulang terminal** supaya `PATH` ter-refresh, lalu verifikasi:
+
+```bash
+yt-dlp --version
+ffmpeg -version
+```
+
+> Kalau pakai Git Bash/MINGW dan ffmpeg/yt-dlp tidak ketemu di `PATH`, set lokasinya secara eksplisit di `.env`:
+> ```
+> YTDLP_PATH=C:/Users/<user>/AppData/Local/Microsoft/WinGet/Packages/yt-dlp.yt-dlp_.../yt-dlp.exe
+> FFMPEG_PATH=C:/ffmpeg/bin/ffmpeg.exe
+> ```
+> Atau download binary ffmpeg dari https://www.gyan.dev/ffmpeg/builds/ (release essentials), ekstrak ke `C:\ffmpeg`, lalu tambahkan `C:\ffmpeg\bin` ke system PATH.
+
+### Verifikasi server bisa menemukan binary
+
+Cek endpoint `/health/deps` setelah server jalan:
+
+```bash
+curl http://localhost:3000/health/deps
+# → {"ok":true,"ytdlp":{"ok":true,"version":"..."},"ffmpeg":{"ok":true,"version":"..."}}
+```
+
+Jika `ok: false`, lihat field `error` untuk diagnosa.
+
 ---
 
 ## Setup Lokal
