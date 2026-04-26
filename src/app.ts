@@ -23,6 +23,12 @@ const WEB_DIR = path.resolve(__dirname, "..", "web");
 export function createApp(): Express {
   const app = express();
 
+  // Required when behind a reverse proxy (nginx, etc.) so that req.ip
+  // reflects the real client IP via X-Forwarded-For. Without this,
+  // express-rate-limit would treat every client as the proxy IP and
+  // collapse the per-IP limit into a single global bucket.
+  app.set("trust proxy", 1);
+
   app.disable("x-powered-by");
   // Helmet defaults are friendly to JSON APIs but block CDN-loaded scripts/styles
   // we use for the frontend (Tailwind CDN, Google Fonts, inline event handlers).

@@ -125,12 +125,31 @@ $("#settings-form").addEventListener("submit", (e) => {
   showToast("Pengaturan tersimpan");
 });
 
+function el(tag, className, text) {
+  const node = document.createElement(tag);
+  if (className) node.className = className;
+  if (text != null) node.textContent = String(text);
+  return node;
+}
+
+function renderBinaryRow(parent, label, probe) {
+  const row = el("div");
+  row.append(el("span", "text-slate-500", `${label}: `));
+  if (probe.ok) {
+    const v = String(probe.version || "ok").slice(0, 40);
+    row.append(el("span", "text-slate-200", v));
+  } else {
+    row.append(el("span", "text-red-300", probe.error || "tidak ditemukan"));
+  }
+  parent.append(row);
+}
+
 $("#health-btn").addEventListener("click", async () => {
   const status = $("#health-status");
   status.classList.remove("hidden");
-  status.textContent = "Memeriksa...";
+  status.replaceChildren(document.createTextNode("Memeriksa..."));
   try {
-    // Temporarily apply form values so we can probe before saving
+    // Temporarily apply form values so we can probe before saving.
     const prevBase = localStorage.getItem(STORAGE_KEYS.base);
     const prevKey = localStorage.getItem(STORAGE_KEYS.key);
     setConfig($("#api-base").value, $("#api-key").value);
@@ -144,20 +163,24 @@ $("#health-btn").addEventListener("click", async () => {
       if (prevKey === null) localStorage.removeItem(STORAGE_KEYS.key);
       else localStorage.setItem(STORAGE_KEYS.key, prevKey);
     }
-    const ok = result.ok;
+    const ok = !!result.ok;
     const yt = result.ytdlp || {};
     const ff = result.ffmpeg || {};
-    status.innerHTML = `
-      <div class="flex items-center gap-2 ${ok ? "text-emerald-300" : "text-amber-300"}">
-        <span class="h-2 w-2 rounded-full ${ok ? "bg-emerald-400" : "bg-amber-400"}"></span>
-        <span class="font-medium">${ok ? "Server siap" : "Server menjawab tapi ada masalah"}</span>
-      </div>
-      <div class="mt-2 grid grid-cols-2 gap-2 text-slate-300">
-        <div><span class="text-slate-500">yt-dlp:</span> ${yt.ok ? yt.version || "ok" : `<span class="text-red-300">${yt.error || "tidak ditemukan"}</span>`}</div>
-        <div><span class="text-slate-500">ffmpeg:</span> ${ff.ok ? (ff.version || "ok").slice(0, 24) : `<span class="text-red-300">${ff.error || "tidak ditemukan"}</span>`}</div>
-      </div>`;
+
+    // Build the status block via DOM APIs to avoid HTML injection from
+    // a remote (potentially compromised) API server's response.
+    const root = document.createDocumentFragment();
+    const header = el("div", `flex items-center gap-2 ${ok ? "text-emerald-300" : "text-amber-300"}`);
+    header.append(el("span", `h-2 w-2 rounded-full ${ok ? "bg-emerald-400" : "bg-amber-400"}`));
+    header.append(el("span", "font-medium", ok ? "Server siap" : "Server menjawab tapi ada masalah"));
+    root.append(header);
+    const grid = el("div", "mt-2 grid grid-cols-2 gap-2 text-slate-300");
+    renderBinaryRow(grid, "yt-dlp", yt);
+    renderBinaryRow(grid, "ffmpeg", ff);
+    root.append(grid);
+    status.replaceChildren(root);
   } catch (err) {
-    status.innerHTML = `<span class="text-red-300">Gagal: ${err.message || err}</span>`;
+    status.replaceChildren(el("span", "text-red-300", `Gagal: ${err?.message || err}`));
   }
 });
 
