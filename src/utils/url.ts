@@ -18,9 +18,11 @@ const PRIVATE_HOST_REGEX = [
   /^192\.168\./,
   /^172\.(1[6-9]|2\d|3[01])\./,
   /^169\.254\./,
-  /^fc00::/i,
-  /^fd00::/i,
-  /^fe80::/i,
+  // IPv6 ULA fc00::/7 — first byte 0xfc or 0xfd, any value for the remaining nibbles.
+  // (e.g. fd42:1234::1 must be blocked, not just fd00::*)
+  /^f[cd][0-9a-f]{2}:/i,
+  // IPv6 link-local fe80::/10 — first byte 0xfe with the high two bits 10 (so 0x80–0xbf).
+  /^fe[89ab][0-9a-f]:/i,
   // IPv4-mapped IPv6 (e.g. [::ffff:127.0.0.1] which Node normalizes to ::ffff:7f00:1).
   // Without this, an attacker could bypass the IPv4 private-range checks via IPv6 syntax.
   /^::ffff:/i,
