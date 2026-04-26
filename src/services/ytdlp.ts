@@ -1,7 +1,22 @@
 import { spawn } from "node:child_process";
+import path from "node:path";
 import { config } from "../config.js";
 import { UpstreamError } from "../errors.js";
 import { logger } from "../logger.js";
+
+/**
+ * Whether the given `--ffmpeg-location` value is something yt-dlp can use directly.
+ * yt-dlp expects an absolute path to an ffmpeg binary, or a directory containing it.
+ * If the value is a bare command name like `"ffmpeg"`, passing it via
+ * `--ffmpeg-location` overrides yt-dlp's own PATH discovery and breaks postprocessing
+ * even when ffmpeg is on the system PATH. In that case we should let yt-dlp resolve
+ * ffmpeg itself.
+ */
+function shouldPassFfmpegLocation(p: string): boolean {
+  if (!p) return false;
+  if (path.isAbsolute(p)) return true;
+  return /[\\/]/.test(p);
+}
 
 export interface VideoInfo {
   id: string;
@@ -119,7 +134,7 @@ export async function download(opts: DownloadOptions): Promise<DownloadResult> {
     "--no-simulate",
   ];
 
-  if (opts.ffmpegLocation) {
+  if (opts.ffmpegLocation && shouldPassFfmpegLocation(opts.ffmpegLocation)) {
     args.push("--ffmpeg-location", opts.ffmpegLocation);
   }
 
