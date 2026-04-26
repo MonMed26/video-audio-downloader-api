@@ -2,7 +2,14 @@ import { ValidationError } from "../errors.js";
 
 const ALLOWED_PROTOCOLS = new Set(["http:", "https:"]);
 
-const PRIVATE_HOSTNAMES = new Set(["localhost", "127.0.0.1", "0.0.0.0", "::1"]);
+const PRIVATE_HOSTNAMES = new Set([
+  "localhost",
+  "127.0.0.1",
+  "0.0.0.0",
+  "::1",
+  // IPv6 unspecified address — routes to localhost on Linux/macOS.
+  "::",
+]);
 
 const PRIVATE_HOST_REGEX = [
   /^10\./,

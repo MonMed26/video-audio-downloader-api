@@ -1,10 +1,11 @@
 # video-audio-downloader-api
 
-REST API untuk mengunduh **video** dan **audio** dari berbagai platform (YouTube, TikTok, Instagram, Facebook, X/Twitter, Twitch clip, dsb.) dengan kualitas terbaik. Dibangun di atas:
+REST API + Web UI untuk mengunduh **video** dan **audio** dari berbagai platform (YouTube, TikTok, Instagram, Facebook, X/Twitter, Twitch clip, dsb.) dengan kualitas terbaik. Dibangun di atas:
 
 - **Node.js + Express + TypeScript**
 - **[yt-dlp](https://github.com/yt-dlp/yt-dlp)** sebagai mesin download multi-platform
 - **ffmpeg** untuk merge video+audio dan konversi MP3
+- **Web UI** static (HTML + Tailwind via CDN) — modern, responsif, dark mode, siap deploy ke Vercel.
 
 API men-download file di server, lalu mengembalikan **URL publik** yang bisa langsung dipakai untuk mengunduh hasilnya. File otomatis dihapus setelah TTL (default 60 menit).
 
@@ -12,10 +13,11 @@ API men-download file di server, lalu mengembalikan **URL publik** yang bisa lan
 
 ## Fitur
 
+- **Web UI** di `/` — modern, dark theme, mobile-first responsif. Tempel URL → klik download → dapat link.
 - `GET  /api/info?url=...` — metadata video (judul, durasi, thumbnail, daftar format).
 - `POST /api/download` — download video / audio kualitas terbaik, return URL publik.
 - `GET  /files/:filename` — serve file hasil download (dipanggil otomatis lewat `downloadUrl` di response).
-- `GET  /health` & `GET /health/deps` — health check + cek binary yt-dlp.
+- `GET  /health` & `GET /health/deps` — health check + cek binary yt-dlp & ffmpeg.
 - Auto cleanup file expired tiap 5 menit.
 - Rate limiting per IP.
 - Proteksi opsional via `x-api-key` header.
@@ -306,6 +308,47 @@ sudo certbot --nginx -d downloader.example.com   # HTTPS via Let's Encrypt
 ```
 
 Setelah HTTPS aktif, ubah `PUBLIC_BASE_URL=https://downloader.example.com` di `.env` lalu `sudo systemctl restart downloader-api`.
+
+---
+
+## Deploy Web UI ke Vercel
+
+UI di folder `web/` adalah static site (HTML + JS + CSS murni, tanpa build step) — bisa langsung di-host di **Vercel**, **Netlify**, **Cloudflare Pages**, atau static host manapun. **API tetap di VPS** Anda; UI cukup tahu base URL-nya.
+
+> **Kenapa hanya UI yang di-Vercel?** Vercel serverless punya timeout 10–60 detik dan filesystem `/tmp` ephemeral, sementara download YouTube bisa >1 menit dan kita perlu menyimpan file untuk di-serve via URL publik. Pisahkan UI (Vercel, gratis & cepat) dengan API (VPS Anda).
+
+### 1. Pastikan API publik via HTTPS
+
+Ikuti seksi **Deploy ke VPS Linux** di atas. UI Vercel akan memanggil API VPS Anda lewat HTTPS, jadi domain HTTPS wajib (browser modern memblokir mixed content HTTP dari HTTPS UI).
+
+### 2. Push repo ke GitHub (sudah)
+
+Repo ini sudah ada `vercel.json` yang mengatur Vercel:
+
+- `outputDirectory: "web"` — Vercel deploy hanya isi folder `web/`.
+- Tidak ada build step (static).
+- `.vercelignore` mengeluarkan `src/`, `node_modules/`, dll.
+
+### 3. Import repo di Vercel
+
+1. Buka https://vercel.com/new dan pilih repo `video-audio-downloader-api`.
+2. Di "Configure Project", biarkan setting default — `vercel.json` sudah meng-handle semuanya.
+3. Klik **Deploy**.
+
+Setelah deploy selesai (biasanya <30 detik), Anda dapat URL semacam `https://video-audio-downloader-api.vercel.app`.
+
+### 4. Set base URL ke API VPS
+
+Buka URL Vercel di browser, klik **Pengaturan** di pojok kanan atas, isi:
+
+- **API base URL**: `https://downloader.example.com` (URL VPS Anda)
+- **API key** (opsional): isi kalau Anda set `API_KEY` di `.env` VPS.
+
+Klik **Cek koneksi** untuk verifikasi (`/health/deps` harus return ok untuk yt-dlp & ffmpeg). Klik **Simpan**. Setting tersimpan di `localStorage` browser.
+
+### 5. (Opsional) Custom domain
+
+Di Vercel project → Settings → Domains, tambahkan domain Anda (mis. `downloader.example.com`). UI dan API bisa pakai sub-domain berbeda (`api.example.com` untuk API, `downloader.example.com` untuk UI).
 
 ---
 
